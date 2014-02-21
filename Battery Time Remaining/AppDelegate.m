@@ -70,6 +70,34 @@ static void PowerSourceChanged(void * context)
     [self loadNotificationSetting];
     
     // Set default notification settings if not set
+    if (![self.notifications objectForKey:@"0"])
+    {
+        [self.notifications setValue:[NSNumber numberWithBool:YES] forKey:@"0"];
+    }
+    if (![self.notifications objectForKey:@"1"])
+    {
+        [self.notifications setValue:[NSNumber numberWithBool:YES] forKey:@"1"];
+    }
+    if (![self.notifications objectForKey:@"2"])
+    {
+        [self.notifications setValue:[NSNumber numberWithBool:YES] forKey:@"2"];
+    }
+    if (![self.notifications objectForKey:@"3"])
+    {
+        [self.notifications setValue:[NSNumber numberWithBool:YES] forKey:@"3"];
+    }
+    if (![self.notifications objectForKey:@"4"])
+    {
+        [self.notifications setValue:[NSNumber numberWithBool:YES] forKey:@"4"];
+    }
+    if (![self.notifications objectForKey:@"5"])
+    {
+        [self.notifications setValue:[NSNumber numberWithBool:YES] forKey:@"5"];
+    }
+    if (![self.notifications objectForKey:@"10"])
+    {
+        [self.notifications setValue:[NSNumber numberWithBool:YES] forKey:@"10"];
+    }
     if (![self.notifications objectForKey:@"15"])
     {
         [self.notifications setValue:[NSNumber numberWithBool:YES] forKey:@"15"];
@@ -103,14 +131,16 @@ static void PowerSourceChanged(void * context)
     
     // Build the notification submenu
     NSMenu *notificationSubmenu = [[NSMenu alloc] initWithTitle:@"Notification Menu"];
-    for (int i = 5; i <= 100; i = i + 5)
+    for (int i = 0; i <= 100; i = i + 1)
     {
-        BOOL state = [[self.notifications valueForKey:[NSString stringWithFormat:@"%d", i]] boolValue];
-        
-        NSMenuItem *notificationSubmenuItem = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"%d%%", i] action:@selector(toggleNotification:) keyEquivalent:@""];
-        notificationSubmenuItem.tag = i;
-        notificationSubmenuItem.state = (state) ? NSOnState : NSOffState;
-        [notificationSubmenu addItem:notificationSubmenuItem];
+        if (i < 15 || i % 5  == 0) {
+            BOOL state = [[self.notifications valueForKey:[NSString stringWithFormat:@"%d", i]] boolValue];
+            
+            NSMenuItem *notificationSubmenuItem = [[NSMenuItem alloc] initWithTitle:[NSString stringWithFormat:@"%d%%", i] action:@selector(toggleNotification:) keyEquivalent:@""];
+            notificationSubmenuItem.tag = i;
+            notificationSubmenuItem.state = (state) ? NSOnState : NSOffState;
+            [notificationSubmenu addItem:notificationSubmenuItem];
+        }
     }
     
     // Notification menu item
