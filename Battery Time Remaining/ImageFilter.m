@@ -20,7 +20,7 @@
     CIImage *beginImage = [[CIImage alloc] initWithData:[image TIFFRepresentation]];
     CIImage *blackAndWhite = [[CIFilter filterWithName:@"CIColorControls" keysAndValues:kCIInputImageKey, beginImage, @"inputBrightness", [NSNumber numberWithFloat:0.0], @"inputContrast", [NSNumber numberWithFloat:1.1], @"inputSaturation", [NSNumber numberWithFloat:0.0], nil] valueForKey:@"outputImage"];
     CIImage *output = [[CIFilter filterWithName:@"CIExposureAdjust" keysAndValues:kCIInputImageKey, blackAndWhite, @"inputEV", [NSNumber numberWithFloat:0.7], nil] valueForKey:@"outputImage"];
-    [output drawInRect:NSMakeRect(0, 0, [_image size].width, [_image size].height) fromRect:NSRectFromCGRect([output extent]) operation:NSCompositeSourceOver fraction:1.0];
+    //[output drawInRect:NSMakeRect(0, 0, [_image size].width, [_image size].height) fromRect:NSRectFromCGRect([output extent]) operation:NSCompositeSourceOver fraction:1.0];
     
     [image unlockFocus];
     
@@ -53,7 +53,7 @@
     [filter setDefaults];
     [filter setValue:ciImage forKey:@"inputImage"];
     CIImage *output = [filter valueForKey:@"outputImage"];
-    [output drawInRect:NSMakeRect(0, 0, [_image size].width, [_image size].height) fromRect:NSRectFromCGRect([output extent]) operation:NSCompositeSourceOver fraction:1.0];
+    //[output drawInRect:NSMakeRect(0, 0, [_image size].width, [_image size].height) fromRect:NSRectFromCGRect([output extent]) operation:NSCompositeSourceOver fraction:1.0];
     
     [image unlockFocus];
     
