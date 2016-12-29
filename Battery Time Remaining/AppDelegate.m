@@ -7,16 +7,13 @@
 //
 
 #import "AppDelegate.h"
-#import "HttpGet.h"
 #import "ImageFilter.h"
-#import "LLManager.h"
 #import <IOKit/ps/IOPowerSources.h>
 #import <IOKit/ps/IOPSKeys.h>
 #import <IOKit/pwr_mgt/IOPM.h>
 #import <IOKit/pwr_mgt/IOPMLib.h>
 
 //#define DEBUG_BATTERY_PERCENT
-//#define CHECK_FOR_UPDATE
 
 // In Apple's battery gauge, the battery icon is rendered further down from the
 // top than NSStatusItem does it. Hence we add an extra top offset to get the
@@ -130,12 +127,6 @@ static void PowerSourceChanged(void * context)
     [psAdvancedMenu setEnabled:NO];
     [psAdvancedMenu setHidden:![[NSUserDefaults standardUserDefaults] boolForKey:@"advanced"]];
     
-    // Start at login menu item
-    NSMenuItem *startAtLoginMenu = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Start at login", @"Start at login setting") action:@selector(toggleStartAtLogin:) keyEquivalent:@""];
-    [startAtLoginMenu setTag:kBTRMenuStartAtLogin];
-    startAtLoginMenu.target = self;
-    startAtLoginMenu.state = ([LLManager launchAtLogin]) ? NSOnState : NSOffState;
-    
     // Build the notification submenu
     NSMenu *notificationSubmenu = [[NSMenu alloc] initWithTitle:@"Notification Menu"];
     for (int i = 0; i <= 100; i = i + 1)
@@ -220,13 +211,6 @@ static void PowerSourceChanged(void * context)
     [settingMenu setTag:kBTRMenuSetting];
     [settingMenu setSubmenu:settingSubmenu];
     
-#ifdef CHECK_FOR_UPDATE
-    // Updater menu
-    NSMenuItem *updaterMenu = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Checking for updates…", @"Update menuitem") action:nil keyEquivalent:@""];
-    [updaterMenu setTag:kBTRMenuUpdater];
-    [updaterMenu setEnabled:NO];
-#endif
-    
     // Build the statusbar menu
     NSMenu *statusBarMenu = [[NSMenu alloc] initWithTitle:@"Status Menu"];
     [statusBarMenu setDelegate:self];
@@ -236,18 +220,12 @@ static void PowerSourceChanged(void * context)
     [statusBarMenu addItem:psAdvancedMenu];
     [statusBarMenu addItem:[NSMenuItem separatorItem]]; // Separator
     
-    [statusBarMenu addItem:startAtLoginMenu];
     [statusBarMenu addItem:notificationMenu];
     [statusBarMenu addItem:settingMenu];
     [statusBarMenu addItem:[NSMenuItem separatorItem]]; // Separator
     
     [statusBarMenu addItemWithTitle:NSLocalizedString(@"Energy Saver Preferences…", @"Open Energy Saver Preferences menuitem") action:@selector(openEnergySaverPreference:) keyEquivalent:@""];
     [statusBarMenu addItem:[NSMenuItem separatorItem]]; // Separator
-    
-#ifdef CHECK_FOR_UPDATE
-    [statusBarMenu addItem:updaterMenu];
-    [statusBarMenu addItem:[NSMenuItem separatorItem]]; // Separator
-#endif
     
     [statusBarMenu addItemWithTitle:NSLocalizedString(@"Quit", @"Quit menuitem") action:@selector(terminate:) keyEquivalent:@""];
     
@@ -643,7 +621,7 @@ static void PowerSourceChanged(void * context)
     NSDrawThreePartImage(NSMakeRect(capBarLeftOffset, capBarTopOffset, capBarLength, capBarHeight),
                          batteryLevelLeft, batteryLevelMiddle, batteryLevelRight,
                          NO,
-                         NSCompositeCopy,
+                         NSCompositingOperationCopy,
                          0.94f,
                          NO);
     [batteryOutline unlockFocus];
@@ -712,20 +690,6 @@ static void PowerSourceChanged(void * context)
     else
     {
         [self openMacAppStore:nil];
-    }
-}
-
-- (void)toggleStartAtLogin:(id)sender
-{
-    if ([LLManager launchAtLogin])
-    {
-        [LLManager setLaunchAtLogin:NO];
-        [self.statusItem.menu itemWithTag:kBTRMenuStartAtLogin].state = NSOffState;
-    }
-    else
-    {
-        [LLManager setLaunchAtLogin:YES];
-        [self.statusItem.menu itemWithTag:kBTRMenuStartAtLogin].state = NSOnState;
     }
 }
 
@@ -1016,47 +980,6 @@ static void PowerSourceChanged(void * context)
                                             userInfo:nil
                                              repeats:YES];
     [[NSRunLoop currentRunLoop] addTimer:menuUpdateTimer forMode:NSRunLoopCommonModes];
-    
-#ifdef CHECK_FOR_UPDATE
-    // Update menu
-    NSMenuItem *updaterMenu = [self.statusItem.menu itemWithTag:kBTRMenuUpdater];
-    
-    // Stop checking if newer version is available
-    if ([updaterMenu isEnabled])
-    {
-        return;
-    }
-    
-    // Check for newer version
-    [[HttpGet new] url:@"http://yap.nu/battery-time-remaining/build_version2" success:^(NSString *result) {
-        NSInteger latestBuildVersion = [result integerValue];
-        NSInteger currentBuildVersion = [[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"] integerValue];
-        NSString *currentBuildVersionText = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-        
-        // Wrong format build version
-        if (!latestBuildVersion)
-        {
-            updaterMenu.title = NSLocalizedString(@"Could not check for updates", @"Update menuitem");
-            return;
-        }
-        
-        // Newer version available
-        if (latestBuildVersion > currentBuildVersion)
-        {
-            updaterMenu.title = NSLocalizedString(@"A newer version is available", @"Update menuitem");
-            [updaterMenu setAction:@selector(promptAutoUpdate:)];
-            [updaterMenu setEnabled:YES];
-            [self notify:NSLocalizedString(@"A newer version is available", @"Update notification")];
-        }
-        else
-        {
-            updaterMenu.title = [NSString stringWithFormat:@"%@ - v%@", NSLocalizedString(@"Up to date", @"Update menuitem"), currentBuildVersionText];
-        }
-    } error:^(NSError *error) {
-        updaterMenu.title = NSLocalizedString(@"Could not check for updates", @"Update menuitem");
-    }];
-#endif
-    
 }
 
 - (void)menuDidClose:(NSMenu *)menu
